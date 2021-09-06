@@ -21,6 +21,8 @@ DHT_Unified dht(DHTPIN, DHTTYPE);
 
 #define SENSOR_POLLING_DELAY 3000 // Must be greater than or equal to sensor.min_delay
 
+unsigned long lastUpdate = millis();
+
 void drawData(float temp, float humidity) {
     display.clearDisplay();
     display.setTextSize(1);
@@ -32,6 +34,7 @@ void drawData(float temp, float humidity) {
     display.println(!isnan(temp) ? String(temp) + "C" : "error");
     display.print(F("Humidity: "));
     display.println(!isnan(humidity) ? String(humidity) + "%" : "error");
+
     display.display();
 }
 
@@ -94,14 +97,18 @@ void setup() {
 }
 
 void loop() {
-    delay(SENSOR_POLLING_DELAY);
+    unsigned long curMillis = millis();
 
-    sensors_event_t event;
-    dht.temperature().getEvent(&event);
-    float temp = event.temperature;
+    if (curMillis - lastUpdate >= SENSOR_POLLING_DELAY) {
+        sensors_event_t event;
+        dht.temperature().getEvent(&event);
+        float temp = event.temperature;
 
-    dht.humidity().getEvent(&event);
-    float humidity = event.relative_humidity;
+        dht.humidity().getEvent(&event);
+        float humidity = event.relative_humidity;
 
-    drawData(temp, humidity);
+        drawData(temp, humidity);
+
+        lastUpdate = curMillis;
+    }
 }
