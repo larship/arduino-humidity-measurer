@@ -17,7 +17,7 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #define DHT_PIN 2
 #define DHT_TYPE DHT11
 
-#define GYML8511_PIN 1
+#define GYML8511_PIN A1
 
 DHT_Unified dht(DHT_PIN, DHT_TYPE);
 
