@@ -25,7 +25,7 @@ DHT_Unified dht(DHT_PIN, DHT_TYPE);
 
 unsigned long lastUpdate = millis();
 
-void drawData(float temp, float humidity, int uv) {
+void drawData(float temp, float humidity, float uvVolt) {
     display.clearDisplay();
     display.setTextSize(1);
     display.setTextColor(WHITE);
@@ -37,7 +37,7 @@ void drawData(float temp, float humidity, int uv) {
     display.print(F("Humidity: "));
     display.println(!isnan(humidity) ? String(humidity) + "%" : "error");
     display.print(F("UV: "));
-    display.println(!isnan(uv) ? String(uv) : "error");
+    display.println(!isnan(uvVolt) ? String(uvVolt) + "V (1-3.3V)" : "error");
 
     display.display();
 }
@@ -113,9 +113,13 @@ void loop() {
         dht.humidity().getEvent(&event);
         float humidity = event.relative_humidity;
 
-        int uvData = analogRead(GYML8511_PIN);
+        // @todo Преобразовывать выход датчика UV в понятный вид
+        // 1 вольт = 0 интенсивность UV
+        // 3.3 вольта = 15 интенсивность UV
+        float uvData = (float) analogRead(GYML8511_PIN);
+        float uvVolt = uvData / 1024 * 3.3;
 
-        drawData(temp, humidity, uvData);
+        drawData(temp, humidity, uvVolt);
 
         lastUpdate = curMillis;
     }
