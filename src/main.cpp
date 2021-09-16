@@ -25,7 +25,7 @@ DHT_Unified dht(DHT_PIN, DHT_TYPE);
 
 unsigned long lastUpdate = millis();
 
-void drawData(float temp, float humidity, float uvVolt) {
+void drawData(float temp, float humidity, float uvVolt, float uvIntensity) {
     display.clearDisplay();
     display.setTextSize(1);
     display.setTextColor(WHITE);
@@ -38,6 +38,8 @@ void drawData(float temp, float humidity, float uvVolt) {
     display.println(!isnan(humidity) ? String(humidity) + "%" : "error");
     display.print(F("UV: "));
     display.println(!isnan(uvVolt) ? String(uvVolt) + "V (1-3.3V)" : "error");
+    display.print(F("UV: "));
+    display.println(!isnan(uvVolt) ? String(uvIntensity) + " (0-15)" : "error");
 
     display.display();
 }
@@ -88,6 +90,26 @@ void printSensorDetails() {
     Serial.println(F("------------------------------------"));
 }
 
+float uvVoltToIntensity(float volt)
+{
+    float minVolt = 1.0;
+    float maxVolt = 3.0;
+    float minIntensity = 0.0;
+    float maxIntensity = 15;
+
+    if (volt < minVolt)
+    {
+        return minIntensity;
+    }
+
+    if (volt > maxVolt)
+    {
+        return maxIntensity;
+    }
+
+    return (maxIntensity - minIntensity) / (maxVolt - minVolt) * (volt - 1);
+}
+
 void setup() {
     Serial.begin(9600);
     while (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
@@ -113,13 +135,12 @@ void loop() {
         dht.humidity().getEvent(&event);
         float humidity = event.relative_humidity;
 
-        // @todo Преобразовывать выход датчика UV в понятный вид
-        // 1 вольт = 0 интенсивность UV
-        // 3.3 вольта = 15 интенсивность UV
         float uvData = (float) analogRead(GYML8511_PIN);
         float uvVolt = uvData / 1024 * 3.3;
 
-        drawData(temp, humidity, uvVolt);
+        float uvIntensity = uvVoltToIntensity(uvVolt);
+
+        drawData(temp, humidity, uvVolt, uvIntensity);
 
         lastUpdate = curMillis;
     }
